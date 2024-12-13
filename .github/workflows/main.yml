@@ -1,18 +1,23 @@
-name: Argo TCP Tunnel RDP Access
+name: PageKite RDP TCP Tunnel
 
-on: 
+on:
   workflow_dispatch:
   push:
     branches: [ main ]
 
 jobs:
-  setup-rdp:
+  setup-rdp-tunnel:
     runs-on: windows-latest
     
     steps:
-    - name: Download Cloudflared
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+    
+    - name: Install PageKite
       run: |
-        Invoke-WebRequest https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe -OutFile cloudflared.exe
+        pip install pagekite
     
     - name: Configure Remote Desktop
       run: |
@@ -30,19 +35,20 @@ jobs:
         # Set password untuk akun runner
         Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd2024!" -Force)
     
-    - name: Start Argo Tunnel
+    - name: Start PageKite Tunnel
       run: |
-        # Jalankan Cloudflared untuk tunnel TCP
-        Start-Process -FilePath .\cloudflared.exe -ArgumentList "tunnel", "--url", "tcp://localhost:3389" -PassThru
+        # Jalankan PageKite untuk tunnel RDP
+        Start-Process powershell -ArgumentList "-Command", "pagekite 3389 rdp-tunnel.pagekite.me" -PassThru
         
-        # Tunggu 10 detik untuk inisialisasi tunnel
+        # Tunggu inisialisasi tunnel
         Start-Sleep -Seconds 10
     
     - name: Display Connection Info
       run: |
-        # Tampilkan informasi koneksi
         Write-Host "RDP Tunnel Created!"
-        Write-Host "Use the generated Argo tunnel address to connect"
+        Write-Host "Connect to: rdp-tunnel.pagekite.me:3389"
+        Write-Host "Username: runneradmin"
+        Write-Host "Password: P@ssw0rd2024!"
     
     - name: Keep Workflow Alive
       run: |
