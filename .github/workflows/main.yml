@@ -1,4 +1,4 @@
-name: Sshuttle RDP TCP Tunnel
+name: Pgrok RDP TCP Tunnel
 
 on:
   workflow_dispatch:
@@ -15,9 +15,9 @@ jobs:
       with:
         python-version: '3.x'
     
-    - name: Install Sshuttle
+    - name: Install Pgrok
       run: |
-        pip install sshuttle
+        pip install pgrok
     
     - name: Configure Remote Desktop
       run: |
@@ -29,13 +29,13 @@ jobs:
       run: |
         Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd2024!" -Force)
     
-    - name: Start Sshuttle Tunnel
+    - name: Start Pgrok Tunnel
       run: |
-        sshuttle -r your-username@your-server-ip 0/0 -vv
+        pgrok --subdomain customsubdomain 3389
     
     - name: Display Tunnel Link
       run: |
-        Write-Host "TCP Tunnel Link: your-server-ip"
+        Write-Host "TCP Tunnel Link: https://customsubdomain.pgrok.me"
     
     - name: Keep Alive
       run: |
