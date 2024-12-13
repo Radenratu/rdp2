@@ -15,10 +15,23 @@ jobs:
       with:
         python-version: '3.x'
     
+    - name: Install Chocolatey
+      run: |
+        Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+    
     - name: Install Cloudflared
       run: |
-        Invoke-WebRequest -Uri "https://cloudflare-wrkrn.s3.amazonaws.com/windows/amd64/cloudflared.exe" -OutFile "cloudflared.exe"
-        Start-Process -FilePath "cloudflared.exe" -ArgumentList "--version" -NoNewWindow -Wait
+        choco install cloudflared -y
+    
+    - name: Configure Remote Desktop
+      run: |
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
+    
+    - name: Set RDP Password
+      run: |
+        Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd2024!" -Force)
     
     - name: Authenticate Cloudflared
       run: |
