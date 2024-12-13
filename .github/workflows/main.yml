@@ -1,4 +1,4 @@
-name: LocalXpose RDP TCP Tunnel
+name: Cloudflare RDP TCP Tunnel
 
 on:
   workflow_dispatch:
@@ -15,29 +15,38 @@ jobs:
       with:
         python-version: '3.x'
     
-    - name: Install LocalXpose
+    - name: Install Cloudflared
       run: |
-        Invoke-WebRequest -Uri "https://localxpose.io/download/localxpose-v3.4.1-windows-amd64.zip" -OutFile "localxpose.zip"
-        Expand-Archive -Path "localxpose.zip" -DestinationPath "$env:USERPROFILE\localxpose"
-        $env:PATH += ";$env:USERPROFILE\localxpose"
+        Invoke-WebRequest -Uri "https://cloudflare-wrkrn.s3.amazonaws.com/windows/amd64/cloudflared.exe" -OutFile "cloudflared.exe"
+        Start-Process -FilePath "cloudflared.exe" -ArgumentList "--version" -NoNewWindow -Wait
     
-    - name: Configure Remote Desktop
+    - name: Authenticate Cloudflared
       run: |
-        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
-        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
+        cloudflared tunnel login
     
-    - name: Set RDP Password
+    - name: Create Tunnel
       run: |
-        Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd2024!" -Force)
+        cloudflared tunnel create freerdplovesubedi
     
-    - name: Start LocalXpose Tunnel
+    - name: Configure Tunnel
       run: |
-        localxpose.exe tcp --port 3389
+        $uuid = (cloudflared tunnel list | Select-String -Pattern "UUID")[0].ToString().Trim()
+        $config = @"
+        tunnel: $uuid
+        credentials-file: /root/.cloudflared/$uuid.json
+        ingress:
+          - hostname: freerdplovesubedi.cloudflare.com
+            service: tcp://localhost:3389
+        "@
+        $config | Out-File -FilePath ~/.cloudflared/config.yml
+    
+    - name: Start Tunnel
+      run: |
+        cloudflared tunnel run
     
     - name: Display Tunnel Link
       run: |
-        Write-Host "TCP Tunnel Link: https://freerdplovesubedi.localxpose.io"
+        Write-Host "TCP Tunnel Link: https://freerdplovesubedi.cloudflare.com"
     
     - name: Keep Alive
       run: |
