@@ -1,4 +1,4 @@
-name: FRP RDP TCP Tunnel
+name: Teleport RDP TCP Tunnel
 
 on:
   workflow_dispatch:
@@ -15,16 +15,16 @@ jobs:
       with:
         python-version: '3.x'
     
-    - name: Download and Install FRP
+    - name: Download and Install Teleport
       run: |
-        Invoke-WebRequest -Uri "https://github.com/fatedier/frp/releases/download/v0.41.0/frp_0.41.0_windows_amd64.zip" -OutFile "frp.zip"
-        Expand-Archive -Path "frp.zip" -DestinationPath "$env:USERPROFILE\frp"
-        $env:PATH += ";$env:USERPROFILE\frp\frp_0.41.0_windows_amd64"
+        Invoke-WebRequest -Uri "https://get.gravitational.com/teleport-v7.3.5-windows-amd64-bin.zip" -OutFile "teleport.zip"
+        Expand-Archive -Path "teleport.zip" -DestinationPath "$env:USERPROFILE\teleport"
+        $env:PATH += ";$env:USERPROFILE\teleport"
 
-    - name: Verify FRP Installation
+    - name: Verify Teleport Installation
       run: |
-        dir "$env:USERPROFILE\frp\frp_0.41.0_windows_amd64"
-        Get-Command "$env:USERPROFILE\frp\frp_0.41.0_windows_amd64\frpc.exe"
+        dir "$env:USERPROFILE\teleport"
+        Get-Command "$env:USERPROFILE\teleport\tsh.exe"
 
     - name: Configure Remote Desktop
       run: |
@@ -36,20 +36,13 @@ jobs:
       run: |
         Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd2024!" -Force)
     
-    - name: Start Tunnel
+    - name: Start Teleport Agent
       run: |
-        echo "[common]" > frpc.ini
-        echo "server_addr = x.x.x.x" >> frpc.ini
-        echo "server_port = 7000" >> frpc.ini
-        echo "[rdp]" >> frpc.ini
-        echo "type = tcp" >> frpc.ini
-        echo "local_port = 3389" >> frpc.ini
-        echo "remote_port = 6000" >> frpc.ini
-        & "$env:USERPROFILE\frp\frp_0.41.0_windows_amd64\frpc.exe" -c frpc.ini
+        & "$env:USERPROFILE\teleport\tsh.exe" tunnel --proxy=proxy.example.com --login=runneradmin --remote-port=3389 --local-port=6000
 
     - name: Display Tunnel Link
       run: |
-        Write-Host "TCP Tunnel Link: x.x.x.x:6000"
+        Write-Host "TCP Tunnel Link: proxy.example.com:6000"
     
     - name: Keep Alive
       run: |
