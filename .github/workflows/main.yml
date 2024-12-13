@@ -1,30 +1,43 @@
-name: Expose RDP TCP Tunnel
+name: LocalXpose RDP TCP Tunnel
 
 on:
   workflow_dispatch:
-    push:
-      branches:
-        - main
+  push:
+    branches: [ main ]
 
 jobs:
   setup-rdp-tunnel:
     runs-on: windows-latest
+    
     steps:
-      - name: Setup Expose
-        run: |
-          winget install expose
-      - name: Configure Remote Desktop
-        run: |
-          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
-          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
-      - name: Set RDP Password
-        run: |
-          Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd2024!" -Force)
-      - name: Start Tunnel
-        run: |
-          expose tcp 3389
-          echo "Link TCP: $(expose url)"
-      - name: Keep Alive
-        run: |
-          while ($true) { Start-Sleep -Seconds 60 }
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+    
+    - name: Install LocalXpose
+      run: |
+        Invoke-WebRequest -Uri "https://api.localxpose.io/downloads/localxpose-v1.4.4-windows-amd64.zip" -OutFile "localxpose.zip"
+        Expand-Archive -Path "localxpose.zip" -DestinationPath "$env:USERPROFILE\localxpose"
+        $env:PATH += ";$env:USERPROFILE\localxpose"
+
+    - name: Configure Remote Desktop
+      run: |
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
+    
+    - name: Set RDP Password
+      run: |
+        Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd2024!" -Force)
+    
+    - name: Start Tunnel and Display Link
+      run: |
+        $tunnelOutput = & localxpose tunnel tcp --port 3389
+        Write-Host "TCP Tunnel Link: $tunnelOutput"
+    
+    - name: Keep Alive
+      run: |
+        while ($true) {
+          Start-Sleep -Seconds 60
+        }
