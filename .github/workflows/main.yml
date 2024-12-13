@@ -19,7 +19,12 @@ jobs:
       run: |
         Invoke-WebRequest -Uri "https://github.com/fatedier/frp/releases/download/v0.41.0/frp_0.41.0_windows_amd64.zip" -OutFile "frp.zip"
         Expand-Archive -Path "frp.zip" -DestinationPath "$env:USERPROFILE\frp"
-        $env:PATH += ";$env:USERPROFILE\frp"
+        $env:PATH += ";$env:USERPROFILE\frp\frp_0.41.0_windows_amd64"
+
+    - name: Verify FRP Installation
+      run: |
+        dir "$env:USERPROFILE\frp\frp_0.41.0_windows_amd64"
+        Get-Command "$env:USERPROFILE\frp\frp_0.41.0_windows_amd64\frpc.exe"
 
     - name: Configure Remote Desktop
       run: |
@@ -40,7 +45,7 @@ jobs:
         echo "type = tcp" >> frpc.ini
         echo "local_port = 3389" >> frpc.ini
         echo "remote_port = 6000" >> frpc.ini
-        & $env:USERPROFILE\frp\frpc.exe -c frpc.ini
+        & "$env:USERPROFILE\frp\frp_0.41.0_windows_amd64\frpc.exe" -c frpc.ini
 
     - name: Display Tunnel Link
       run: |
