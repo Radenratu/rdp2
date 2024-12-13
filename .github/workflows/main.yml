@@ -17,10 +17,10 @@ jobs:
     
     - name: Install LocalXpose
       run: |
-        Invoke-WebRequest -Uri "https://api.localxpose.io/downloads/localxpose-v3.4.1-windows-amd64.zip" -OutFile "localxpose.zip"
+        Invoke-WebRequest -Uri "https://localxpose.io/download/localxpose-v3.4.1-windows-amd64.zip" -OutFile "localxpose.zip"
         Expand-Archive -Path "localxpose.zip" -DestinationPath "$env:USERPROFILE\localxpose"
         $env:PATH += ";$env:USERPROFILE\localxpose"
-
+    
     - name: Configure Remote Desktop
       run: |
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
