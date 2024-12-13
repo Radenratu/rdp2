@@ -20,9 +20,12 @@ jobs:
     - name: Set RDP Password
       run: Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
     
-    - name: Create Cloudflare Tunnel
+    - name: Create Cloudflare Tunnel and Get TCP Link
       run: |
-        Start-Process -FilePath .\cloudflared.exe -ArgumentList "tunnel", "–-no-autoupdate", "run", "--token", "${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}" -PassThru
+        Start-Process -FilePath .\cloudflared.exe -ArgumentList "tunnel", "--url", "tcp://localhost:3389" -PassThru
+        Start-Sleep -Seconds 10
+        $tunnelInfo = .\cloudflared.exe tunnel info
+        Write-Output $tunnelInfo
     
     - name: Keep Alive
       run: |
