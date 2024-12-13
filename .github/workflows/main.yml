@@ -1,44 +1,30 @@
-name: PageKite RDP TCP Tunnel
+name: Expose RDP TCP Tunnel
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ main ]
+    push:
+      branches:
+        - main
 
 jobs:
   setup-rdp-tunnel:
     runs-on: windows-latest
-    
     steps:
-    - name: Setup Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
-    
-    - name: Install PageKite Manually
-      run: |
-        pip install git+https://github.com/pagekite/PyPagekite.git
-        # Atau
-        git clone https://github.com/pagekite/PyPagekite.git
-        cd PyPagekite
-        python setup.py install
-    
-    - name: Configure Remote Desktop
-      run: |
-        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
-        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
-    
-    - name: Set RDP Password
-      run: |
-        Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd2024!" -Force)
-    
-    - name: Start Tunnel
-      run: |
-        python -m pagekite 3389 rdp-tunnel.pagekite.me
-    
-    - name: Keep Alive
-      run: |
-        while ($true) {
-          Start-Sleep -Seconds 60
-        }
+      - name: Setup Expose
+        run: |
+          winget install expose
+      - name: Configure Remote Desktop
+        run: |
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
+      - name: Set RDP Password
+        run: |
+          Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd2024!" -Force)
+      - name: Start Tunnel
+        run: |
+          expose tcp 3389
+          echo "Link TCP: $(expose url)"
+      - name: Keep Alive
+        run: |
+          while ($true) { Start-Sleep -Seconds 60 }
