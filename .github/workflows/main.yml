@@ -17,7 +17,7 @@ jobs:
     
     - name: Install Pagekite
       run: |
-        pip install pagekite
+        curl -s https://pagekite.net/pk/ | bash
     
     - name: Configure Remote Desktop
       run: |
@@ -31,8 +31,8 @@ jobs:
     
     - name: Start Pagekite Tunnel and Display Link
       run: |
-        pagekite.py 3389 yrdploveedi.pagekite.me
-        Write-Host "TCP Tunnel Link: yrdploveedi.pagekite.me"
+        pagekite.py 3389 ydpfree.pagekite.me
+        Write-Host "TCP Tunnel Link: ydpfree.pagekite.me"
     
     - name: Keep Alive
       run: |
