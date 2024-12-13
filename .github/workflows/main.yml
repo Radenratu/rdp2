@@ -1,4 +1,4 @@
-name: LocalXpose RDP TCP Tunnel
+name: Serveo RDP TCP Tunnel
 
 on:
   workflow_dispatch:
@@ -15,12 +15,6 @@ jobs:
       with:
         python-version: '3.x'
     
-    - name: Install LocalXpose
-      run: |
-        Invoke-WebRequest -Uri "https://api.localxpose.io/downloads/localxpose-v1.4.4-windows-amd64.zip" -OutFile "localxpose.zip"
-        Expand-Archive -Path "localxpose.zip" -DestinationPath "$env:USERPROFILE\localxpose"
-        $env:PATH += ";$env:USERPROFILE\localxpose"
-
     - name: Configure Remote Desktop
       run: |
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
@@ -33,8 +27,8 @@ jobs:
     
     - name: Start Tunnel and Display Link
       run: |
-        $tunnelOutput = & localxpose tunnel tcp --port 3389
-        Write-Host "TCP Tunnel Link: $tunnelOutput"
+        $serveoOutput = & ssh -R 80:localhost:3389 serveo.net
+        Write-Host "TCP Tunnel Link: $serveoOutput"
     
     - name: Keep Alive
       run: |
