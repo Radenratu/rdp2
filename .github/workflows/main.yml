@@ -1,4 +1,4 @@
-name: Playit.gg RDP TCP Tunnel
+name: zrok RDP TCP Tunnel
 
 on:
   workflow_dispatch:
@@ -19,9 +19,9 @@ jobs:
       run: |
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
-    - name: Install Playit.gg
+    - name: Install zrok
       run: |
-        choco install playit.gg -y
+        choco install zrok -y
 
     - name: Configure Remote Desktop
       run: |
@@ -33,13 +33,18 @@ jobs:
       run: |
         Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd2024!" -Force)
 
-    - name: Create Tunnel with Playit.gg
+    - name: Authenticate zrok
       run: |
-        playit create my-tcp-tunnel tcp://localhost:3389
+        zrok auth
+
+    - name: Create Tunnel with zrok
+      run: |
+        zrok expose tcp://localhost:3389
 
     - name: Display Tunnel Link
       run: |
-        Write-Host "TCP Tunnel Link: https://my-tcp-tunnel.playit.gg"
+        $tunnelLink = zrok url
+        Write-Host "TCP Tunnel Link: $tunnelLink"
 
     - name: Keep Alive
       run: |
