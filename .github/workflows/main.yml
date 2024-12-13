@@ -1,4 +1,4 @@
-name: Teleport RDP TCP Tunnel
+name: Ncat RDP TCP Tunnel
 
 on:
   workflow_dispatch:
@@ -15,17 +15,11 @@ jobs:
       with:
         python-version: '3.x'
     
-    - name: Download and Install Teleport
+    - name: Download and Install Ncat
       run: |
-        Invoke-WebRequest -Uri "https://get.gravitational.com/teleport-v7.3.5-windows-amd64-bin.zip" -OutFile "teleport.zip"
-        Expand-Archive -Path "teleport.zip" -DestinationPath "$env:USERPROFILE\teleport"
-        $env:PATH += ";$env:USERPROFILE\teleport"
-
-    - name: Verify Teleport Installation
-      run: |
-        dir "$env:USERPROFILE\teleport"
-        Get-Command "$env:USERPROFILE\teleport\tsh.exe"
-
+        choco install nmap -y
+        $env:PATH += ";C:\Program Files (x86)\Nmap"
+    
     - name: Configure Remote Desktop
       run: |
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
@@ -36,13 +30,13 @@ jobs:
       run: |
         Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd2024!" -Force)
     
-    - name: Start Teleport Agent
+    - name: Start Ncat Tunnel
       run: |
-        & "$env:USERPROFILE\teleport\tsh.exe" tunnel --proxy=proxy.example.com --login=runneradmin --remote-port=3389 --local-port=6000
-
+        ncat --sh-exec "ncat --exec 'cmd.exe' --allow 0.0.0.0" -l 3389 --keep-open
+    
     - name: Display Tunnel Link
       run: |
-        Write-Host "TCP Tunnel Link: proxy.example.com:6000"
+        Write-Host "TCP Tunnel Link: localhost:3389"
     
     - name: Keep Alive
       run: |
