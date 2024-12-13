@@ -15,44 +15,30 @@ jobs:
       with:
         python-version: '3.x'
     
-    - name: Install PageKite
+    - name: Install PageKite Manually
       run: |
-        pip install pagekite
+        pip install git+https://github.com/pagekite/PyPagekite.git
+        # Atau
+        git clone https://github.com/pagekite/PyPagekite.git
+        cd PyPagekite
+        python setup.py install
     
     - name: Configure Remote Desktop
       run: |
-        # Aktifkan Remote Desktop
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
-        
-        # Aktifkan Firewall RDP
         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-        
-        # Konfigurasi Autentikasi RDP
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
     
     - name: Set RDP Password
       run: |
-        # Set password untuk akun runner
         Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd2024!" -Force)
     
-    - name: Start PageKite Tunnel
+    - name: Start Tunnel
       run: |
-        # Jalankan PageKite untuk tunnel RDP
-        Start-Process powershell -ArgumentList "-Command", "pagekite 3389 rdp-tunnel.pagekite.me" -PassThru
-        
-        # Tunggu inisialisasi tunnel
-        Start-Sleep -Seconds 10
+        python -m pagekite 3389 rdp-tunnel.pagekite.me
     
-    - name: Display Connection Info
+    - name: Keep Alive
       run: |
-        Write-Host "RDP Tunnel Created!"
-        Write-Host "Connect to: rdp-tunnel.pagekite.me:3389"
-        Write-Host "Username: runneradmin"
-        Write-Host "Password: P@ssw0rd2024!"
-    
-    - name: Keep Workflow Alive
-      run: |
-        # Pertahankan workflow tetap berjalan
         while ($true) {
           Start-Sleep -Seconds 60
         }
