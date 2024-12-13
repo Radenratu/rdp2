@@ -8,59 +8,59 @@ on:
 jobs:
   setup-rdp-tunnel:
     runs-on: windows-latest
-    
+
     steps:
     - name: Setup Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.x'
-    
+
     - name: Install Chocolatey
       run: |
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-    
+
     - name: Install Cloudflared
       run: |
         choco install cloudflared -y
-    
+
     - name: Configure Remote Desktop
       run: |
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
-    
+
     - name: Set RDP Password
       run: |
         Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd2024!" -Force)
-    
+
     - name: Authenticate Cloudflared
       run: |
         cloudflared tunnel login
-    
+
     - name: Create Tunnel
       run: |
-        cloudflared tunnel create freerdplovesubedi
-    
+        cloudflared tunnel create my-tcp-tunnel
+
     - name: Configure Tunnel
       run: |
         $uuid = (cloudflared tunnel list | Select-String -Pattern "UUID")[0].ToString().Trim()
         $config = @"
         tunnel: $uuid
-        credentials-file: /root/.cloudflared/$uuid.json
+        credentials-file: C:\Users\runneradmin\.cloudflared\$uuid.json
         ingress:
-          - hostname: freerdplovesubedi.cloudflare.com
+          - hostname: my-tcp-tunnel.cloudflare.com
             service: tcp://localhost:3389
         "@
-        $config | Out-File -FilePath ~/.cloudflared/config.yml
-    
+        $config | Out-File -FilePath C:\Users\runneradmin\.cloudflared\config.yml
+
     - name: Start Tunnel
       run: |
-        cloudflared tunnel run
-    
+        cloudflared tunnel run my-tcp-tunnel
+
     - name: Display Tunnel Link
       run: |
-        Write-Host "TCP Tunnel Link: https://freerdplovesubedi.cloudflare.com"
-    
+        Write-Host "TCP Tunnel Link: https://my-tcp-tunnel.cloudflare.com"
+
     - name: Keep Alive
       run: |
         while ($true) {
