@@ -1,4 +1,4 @@
-name: Localtunnel RDP TCP Tunnel
+name: Telebit RDP TCP Tunnel
 
 on:
   workflow_dispatch:
@@ -15,9 +15,9 @@ jobs:
       with:
         python-version: '3.x'
     
-    - name: Install Localtunnel
+    - name: Install Telebit
       run: |
-        npm install -g localtunnel
+        curl -fsSL https://get.telebit.io | bash
     
     - name: Configure Remote Desktop
       run: |
@@ -29,9 +29,10 @@ jobs:
       run: |
         Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd2024!" -Force)
     
-    - name: Start Localtunnel and Display Link
+    - name: Start Telebit and Display Link
       run: |
-        lt --port 3389 --subdomain yourloverdp
+        telebit http 3389 --domain freerdplovesubedi.telebit.io
+        Write-Host "TCP Tunnel Link: https://freerdplovesubedi.telebit.io"
     
     - name: Keep Alive
       run: |
