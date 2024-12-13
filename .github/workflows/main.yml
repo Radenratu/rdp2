@@ -1,15 +1,18 @@
-name: CI Free TCP Tunnel
+name: Free TCP Tunnel with Bore.pub
 
 on: [push, workflow_dispatch]
 
 jobs:
-  build:
+  setup-tcp-tunnel:
     runs-on: windows-latest
-
     steps:
-    - name: Download Cloudflare Tunnel
-      run: |
-        Invoke-WebRequest https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe -OutFile cloudflared.exe
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+    
+    - name: Install Bore
+      run: npm install -g @boredome/cli
     
     - name: Enable Remote Desktop
       run: |
@@ -20,14 +23,14 @@ jobs:
     - name: Set RDP Password
       run: Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
     
-    - name: Create Cloudflare Tunnel and Get TCP Link
+    - name: Create Bore Tunnel
       run: |
-        Start-Process -FilePath .\cloudflared.exe -ArgumentList "tunnel", "--url", "tcp://localhost:3389" -PassThru
+        bore local 3389 &
         Start-Sleep -Seconds 10
-        $tunnelInfo = .\cloudflared.exe tunnel info
-        Write-Output $tunnelInfo
+        $boreProcess = Get-Process bore
+        Write-Output "Bore Tunnel Running on PID: $($boreProcess.Id)"
     
-    - name: Keep Alive
+    - name: Keep Tunnel Open
       run: |
         while ($true) {
           Start-Sleep -Seconds 60
