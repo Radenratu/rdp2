@@ -1,4 +1,4 @@
-name: Telebit RDP TCP Tunnel
+name: Pagekite RDP TCP Tunnel
 
 on:
   workflow_dispatch:
@@ -15,9 +15,9 @@ jobs:
       with:
         python-version: '3.x'
     
-    - name: Install Telebit
+    - name: Install Pagekite
       run: |
-        curl -fsSL https://get.telebit.io | bash
+        pip install pagekite
     
     - name: Configure Remote Desktop
       run: |
@@ -29,10 +29,10 @@ jobs:
       run: |
         Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd2024!" -Force)
     
-    - name: Start Telebit and Display Link
+    - name: Start Pagekite Tunnel and Display Link
       run: |
-        telebit http 3389 --domain freerdplovesubedi.telebit.io
-        Write-Host "TCP Tunnel Link: https://freerdplovesubedi.telebit.io"
+        pagekite.py 3389 yrdploveedi.pagekite.me
+        Write-Host "TCP Tunnel Link: yrdploveedi.pagekite.me"
     
     - name: Keep Alive
       run: |
