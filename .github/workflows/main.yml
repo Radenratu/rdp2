@@ -1,4 +1,4 @@
-name: Cloudflare RDP TCP Tunnel
+name: Playit.gg RDP TCP Tunnel
 
 on:
   workflow_dispatch:
@@ -19,9 +19,9 @@ jobs:
       run: |
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
-    - name: Install Cloudflared
+    - name: Install Playit.gg
       run: |
-        choco install cloudflared -y
+        choco install playit.gg -y
 
     - name: Configure Remote Desktop
       run: |
@@ -33,33 +33,13 @@ jobs:
       run: |
         Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd2024!" -Force)
 
-    - name: Authenticate Cloudflared
+    - name: Create Tunnel with Playit.gg
       run: |
-        cloudflared tunnel login
-
-    - name: Create Tunnel
-      run: |
-        cloudflared tunnel create my-tcp-tunnel
-
-    - name: Configure Tunnel
-      run: |
-        $uuid = (cloudflared tunnel list | Select-String -Pattern "UUID")[0].ToString().Trim()
-        $config = @"
-        tunnel: $uuid
-        credentials-file: C:\Users\runneradmin\.cloudflared\$uuid.json
-        ingress:
-          - hostname: my-tcp-tunnel.cloudflare.com
-            service: tcp://localhost:3389
-        "@
-        $config | Out-File -FilePath C:\Users\runneradmin\.cloudflared\config.yml
-
-    - name: Start Tunnel
-      run: |
-        cloudflared tunnel run my-tcp-tunnel
+        playit create my-tcp-tunnel tcp://localhost:3389
 
     - name: Display Tunnel Link
       run: |
-        Write-Host "TCP Tunnel Link: https://my-tcp-tunnel.cloudflare.com"
+        Write-Host "TCP Tunnel Link: https://my-tcp-tunnel.playit.gg"
 
     - name: Keep Alive
       run: |
