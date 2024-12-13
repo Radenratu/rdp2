@@ -1,4 +1,4 @@
-name: Pgrok RDP TCP Tunnel
+name: Localtunnel RDP TCP Tunnel
 
 on:
   workflow_dispatch:
@@ -15,9 +15,9 @@ jobs:
       with:
         python-version: '3.x'
     
-    - name: Install Pgrok
+    - name: Install Localtunnel
       run: |
-        pip install pgrok
+        npm install -g localtunnel
     
     - name: Configure Remote Desktop
       run: |
@@ -29,13 +29,9 @@ jobs:
       run: |
         Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd2024!" -Force)
     
-    - name: Start Pgrok Tunnel
+    - name: Start Localtunnel and Display Link
       run: |
-        pgrok --subdomain customsubdomain 3389
-    
-    - name: Display Tunnel Link
-      run: |
-        Write-Host "TCP Tunnel Link: https://customsubdomain.pgrok.me"
+        lt --port 3389 --subdomain yourloverdp
     
     - name: Keep Alive
       run: |
