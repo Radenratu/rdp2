@@ -1,37 +1,52 @@
-name: Free TCP Tunnel with Bore.pub
+name: Argo TCP Tunnel RDP Access
 
-on: [push, workflow_dispatch]
+on: 
+  workflow_dispatch:
+  push:
+    branches: [ main ]
 
 jobs:
-  setup-tcp-tunnel:
+  setup-rdp:
     runs-on: windows-latest
+    
     steps:
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '16'
-    
-    - name: Install Bore
-      run: npm install -g @boredome/cli
-    
-    - name: Enable Remote Desktop
+    - name: Download Cloudflared
       run: |
+        Invoke-WebRequest https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe -OutFile cloudflared.exe
+    
+    - name: Configure Remote Desktop
+      run: |
+        # Aktifkan Remote Desktop
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
+        
+        # Aktifkan Firewall RDP
         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+        
+        # Konfigurasi Autentikasi RDP
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
     
     - name: Set RDP Password
-      run: Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
-    
-    - name: Create Bore Tunnel
       run: |
-        bore local 3389 &
+        # Set password untuk akun runner
+        Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd2024!" -Force)
+    
+    - name: Start Argo Tunnel
+      run: |
+        # Jalankan Cloudflared untuk tunnel TCP
+        Start-Process -FilePath .\cloudflared.exe -ArgumentList "tunnel", "--url", "tcp://localhost:3389" -PassThru
+        
+        # Tunggu 10 detik untuk inisialisasi tunnel
         Start-Sleep -Seconds 10
-        $boreProcess = Get-Process bore
-        Write-Output "Bore Tunnel Running on PID: $($boreProcess.Id)"
     
-    - name: Keep Tunnel Open
+    - name: Display Connection Info
       run: |
+        # Tampilkan informasi koneksi
+        Write-Host "RDP Tunnel Created!"
+        Write-Host "Use the generated Argo tunnel address to connect"
+    
+    - name: Keep Workflow Alive
+      run: |
+        # Pertahankan workflow tetap berjalan
         while ($true) {
           Start-Sleep -Seconds 60
         }
