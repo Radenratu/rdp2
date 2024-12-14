@@ -19,9 +19,17 @@ jobs:
       run: |
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
+    - name: Install wget
+      run: |
+        choco install wget -y
+
+    - name: Download Remote.it
+      run: |
+        wget https://downloads.remote.it/remoteit/v4.14.1/remoteit-4.14.1.arm64.deb -O remoteit.deb
+
     - name: Install Remote.it
       run: |
-        choco install remoteit -y
+        Start-Process msiexec.exe -ArgumentList "/i remoteit.deb /quiet" -Wait
 
     - name: Configure Remote Desktop
       run: |
