@@ -1,4 +1,4 @@
-name: zrok RDP TCP Tunnel
+name: Remote.it RDP TCP Tunnel
 
 on:
   workflow_dispatch:
@@ -19,9 +19,9 @@ jobs:
       run: |
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
-    - name: Install zrok
+    - name: Install Remote.it
       run: |
-        choco install zrok -y
+        choco install remoteit -y
 
     - name: Configure Remote Desktop
       run: |
@@ -33,18 +33,21 @@ jobs:
       run: |
         Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd2024!" -Force)
 
-    - name: Authenticate zrok
+    - name: Authenticate Remote.it
       run: |
-        zrok auth
+        remoteit login --email radenratu760@gmail.com --password Edinst0877
 
-    - name: Create Tunnel with zrok
+    - name: Create Tunnel with Remote.it
       run: |
-        zrok expose tcp://localhost:3389
+        remoteit add --name "RDP Tunnel" --host localhost --port 3389
+
+    - name: Start Tunnel
+      run: |
+        remoteit connect --name "RDP Tunnel"
 
     - name: Display Tunnel Link
       run: |
-        $tunnelLink = zrok url
-        Write-Host "TCP Tunnel Link: $tunnelLink"
+        remoteit list
 
     - name: Keep Alive
       run: |
